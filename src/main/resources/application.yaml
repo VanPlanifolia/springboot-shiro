@@ -1,0 +1,11 @@
+
+# 数据库驱动：
+spring:
+  datasource:
+    username: root
+    password: '010713'
+    url: jdbc:mysql://localhost:3306/spring?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8
+    driver-class-name: com.mysql.cj.jdbc.Driver
+mybatis:
+  type-aliases-package: com.example.pojo
+  mapper-locations: classpath:mapper/*.xml

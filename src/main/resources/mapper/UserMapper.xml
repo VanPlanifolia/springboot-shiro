@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mapper.UsersMapper">
+<!--一对多查询，使用结果集封装查询到的信息，查到的用户权限用list封装一下,注意一对多查询，查询到的结果集要用collection封装
+而，一对一查询查询到的结果集用association封装-->
+    <select id="getUsersByName" parameterType="String" resultMap="userpermsMsg">
+        select * from users,perms
+        where users.id=perms.userid
+        and users.username=#{username}
+    </select>
+    <resultMap id="userpermsMsg" type="Users">
+        <id column="id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="userpass" property="userpass"/>
+        <collection property="permsList" ofType="Perms">
+            <id property="permid" column="permid"/>
+            <result property="permMsg" column="permMsg"/>
+        </collection>
+    </resultMap>
+</mapper>

@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+      xmlns:shiro="http://www.thymeleaf.org/thymeleaf-extras-shiro">
 </html>
 
 <head>
@@ -9,6 +8,21 @@
     <title>首页</title>
 </head>
 <body>
-<a th:href="@{/toadd}">添加</a>|<a th:href="@{/toupdate}">修改</a>
+<p th:if="${session.userLogin==null}">
+    <a th:href="@{/toLogin}">登录</a>
+</p>
+<p th:if="${session.userLogin!=null}">
+    <a th:href="@{/logout}">登出</a>
+</p>
+
+<!--shiro与thymeleaf整合的标签，验证是否有这个权限-->
+<div shiro:hasPermission="user:add">
+    <a th:href="@{/user/toadd}">添加</a>
+</div>
+<div shiro:hasPermission="user:update">
+    <a th:href="@{/user/toupdate}">修改</a>
+</div>
+
+
 </body>
 </html>

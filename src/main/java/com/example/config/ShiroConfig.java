@@ -1,6 +1,6 @@
 package com.example.config;
 
-import com.example.controller.UserRealm;
+import at.pollux.thymeleaf.shiro.dialect.ShiroDialect;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -37,9 +37,11 @@ public class ShiroConfig {
         //我们在这里面进行用户的拦截
         //创建拦截的url以及对应的权限用户，用map来保存
         Map<String,String> filterMap=new LinkedHashMap<>();
+        //设置只有add权限的才能继续操作
+        filterMap.put("/user/toadd","perms[user:add]");
+        filterMap.put("/user/toupdate","perms[user:update]");
         //设定user下的网页只有认证之后才能访问
-        filterMap.put("/toupdate","authc");
-        filterMap.put("/toadd","authc");
+        filterMap.put("/user/*","authc");
         //将属性放到ShiroFilterFactoryBean中
         bean.setFilterChainDefinitionMap(filterMap);
         bean.setLoginUrl("/toLogin");
@@ -61,5 +63,14 @@ public class ShiroConfig {
     @Bean
     public UserRealm userRealm(){
         return new UserRealm();
+    }
+
+    /**
+     * 创建shiro方言
+     * @return
+     */
+    @Bean
+    public ShiroDialect shiroDialect() {
+        return new ShiroDialect();
     }
 }
