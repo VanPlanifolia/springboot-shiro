@@ -210,7 +210,6 @@ mybatis:
 }
 ```
 
-
 * 4.7 动态的添加用户权限，在上面几步绑定mybaits的基础上我们想要动态的给用户添加上权限，我们就需要单独建立一个用户权限表，用一对多的关联映射进行查询，一个用户可以有多个权限，首先我们需要建立一个新数据库表，权限表，这个表中包含了所有用户的权限，而且用户与权限之间的关系很自然的是一对多，一个用户可以拥有多个权限，所以我们需要在权限表中建立外键与用户表的主键进行关联，所以权限表的字段有如下：id主键，权限信息，用户id外键
 
 表如下
@@ -351,3 +350,151 @@ subject.getSession().setAttribute("userLogin",token.getUsername());
             model.addAttribute("msg","用户名不存在！");
             return "/login";
 ```
+
+## SpringBoot环境使用Swagger
+
+1.通过maven引入swagger2的依赖
+
+```xml
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger-ui</artifactId>
+            <version>2.9.2</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/io.springfox/springfox-swagger2 -->
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger2</artifactId>
+            <version>2.9.2</version>
+        </dependency>
+```
+
+2.我们需要在项目中开启swagger，需要编写Config类，在里面可以配置swagger的显示内容以及关联的接口等等等，首先对于开启swagger服务不要忘了添加@EnableSwagger2注解，将该类声明称一个配置类不能忘啦添加注解@Configuration
+
+```java
+@Configuration
+@EnableSwagger2
+public class SwaggerConfig {
+
+}
+```
+
+3. 配置swagger-ui页面的信息显示，swagger管理页面中我们可以设置一些它默认显示的信息，比如说项目的名字，作者的信息，版本号等等，首先我们需要在SwaggerConfig文件中创建一个Bean ’Docket‘，我们可以通过链式编程的方式为他添加api描述信息以及设置某些功能的开关，通过apiInfo();方法，而这个方法需要一个ApiInfo类型的参数，我们就需要创建该对象，并且通过它的构造方法为它进行赋初值，并且这是唯一的方法，它并没有提供set方法具体是实现方法见下代码。
+
+```java
+@Configuration
+@EnableSwagger2
+public class SwaggerConfig {
+    @Bean
+    public Docket docket(){
+        //返回给spring一个Docket对象，其中包含着Swagger的信息
+        return new Docket(DocumentationType.SWAGGER_2)
+                .apiInfo(apiInfo());
+    }
+    private ApiInfo apiInfo(){
+        //作者信息
+        Contact contact=new Contact("Planifolia_Van","Planifolia.Van.net","zhenyuncui@gmail.com");
+        //项目的一些描述
+        return new ApiInfo(
+            "Spring-Shiro演示",
+                "这个项目是用于演示Spring-shiro的用法",
+                "β-1.0",
+                "",
+                //这个参数是一个Contact对象，其中包括了作者的名字，官网，邮箱
+                contact,
+                "",
+                "",
+                new ArrayList<>()
+        );
+    }
+}
+```
+
+4.配置swagger的接口扫描，以及只让swagger在开发环境下显示，对于swagger中的所有配置相关的功能都是基于Docket的，所以我们想要设置包扫描等等需要在new 出来的Docket对象中通过链式编程来设置，而这些配置需要写在.select() 与 .builder()之间具体实现包扫描，而设置其是否可见则需要使用.enable()来进行，而且我们想要在不同环境下来实现swagger的开启与否我们可以通过设置不同环境下的properties文件来实现，然后通过springboot中环境监听的方式来进行环境判断，具体见下代码
+
+```java
+/**
+ * @author 14431
+ */
+@Configuration
+@EnableSwagger2
+public class SwaggerConfig {
+    @Bean
+    public Docket docket(Environment environment){
+        //获取项目目前的运行环境，看是否为开发环境，而且我们需要让swagger只在开发环境下运行
+        Profiles profiles= Profiles.of("dev");
+        //然后我们需要获取springboot当时的环境并且判断是否为dev环境
+        boolean flag = environment.acceptsProfiles(profiles);
+        //返回给spring一个Docket对象，其中包含着Swagger的信息
+        return new Docket(DocumentationType.SWAGGER_2)
+                .apiInfo(apiInfo())
+                //设置swagger是否启动
+                .enable(flag)
+                //所有的扫描配置都要写在 .select()和.build()之间
+                .select()
+                //指定包扫描的方式
+                .apis(RequestHandlerSelectors.basePackage("com.example.controller"))
+                //指定方法上注解扫描的方式需要给一个注解的.class类型
+                .apis(RequestHandlerSelectors.withMethodAnnotation(RequestMapping.class))
+                .build();
+    }
+    private ApiInfo apiInfo(){
+        //作者信息
+        Contact contact=new Contact("Planifolia_Van","Planifolia.Van.net","zhenyuncui@gmail.com");
+        //项目的一些描述
+        return new ApiInfo(
+            "Spring-Shiro演示",
+                "这个项目是用于演示Spring-shiro的用法",
+                "β-1.0",
+                "",
+                //这个参数是一个Contact对象，其中包括了作者的名字，官网，邮箱
+                contact,
+                "",
+                "",
+                new ArrayList<>()
+        );
+    }
+}
+```
+
+5.swagger的创建多个组别协同开发，swagger就是用来帮助携同开发进行交流的工具，在swagger中多个用户协同开发可以使用分组的方式，在swaggerCionfig中一个docket就代表一个用户组，通过 ‘3’ 中的代码示例可以完成用户信息的自定义
+
+```java
+  @Bean
+    public Docket docket1(){
+        return new Docket(DocumentationType.SWAGGER_2).groupName("a");
+    }
+    @Bean
+    public Docket docket2(){
+        return new Docket(DocumentationType.SWAGGER_2).groupName("b");
+    }
+```
+
+6.swagger中引入model模块，在swagger中如果controller中的返回值没有model类型也就是 pojo类那么在swagger界面中就不会出现model模块，我们通过在controller中添加一个测试controller方法来实现model模块的引入,然后我们就会在swagger页面中发现它已经吧我们pojo包中的信息添加到页面上了
+
+```java
+/**
+     * 一个测试swagger的controller
+     * @param username
+     * @param userpass
+     * @return
+     */
+    @ApiOperation("Swagger的测试方法")
+    @GetMapping("/usertest")
+    @ResponseBody
+    public Users usersTest(String username,String userpass){
+        return new Users(001,username,userpass,null);
+    }
+```
+
+![image.png](./assets/1655032761385-image.png)
+
+7.在swagger中提供了丰富的注解，这些注解只有一个作用就是为这个模块或者属性注释，例如：
+
+@ApiModel("xxx")：这个就是用来标注实体类在swagger页面中显示的信息
+
+@ApiModelProperty("xxx") 这个是用来标注一个实体类属性的信息
+
+@ApiOperation("Swagger的测试方法") 这个就是用来标注controller方法的描述信息
+
+由于这些注解只起到标注的作用，那么具体的代码就不再粘贴。

@@ -1,5 +1,7 @@
 package com.example.controller;
 
+import com.example.pojo.Users;
+import io.swagger.annotations.ApiOperation;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.IncorrectCredentialsException;
 import org.apache.shiro.authc.UnknownAccountException;
@@ -7,7 +9,9 @@ import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.Subject;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 /**
  * @author 14431
@@ -78,5 +82,18 @@ public class UserController {
         Subject subject=SecurityUtils.getSubject();
         subject.logout();
         return "index";
+    }
+
+    /**
+     * 一个测试swagger的controller
+     * @param username
+     * @param userpass
+     * @return
+     */
+    @ApiOperation("Swagger的测试方法")
+    @GetMapping("/usertest")
+    @ResponseBody
+    public Users usersTest(String username,String userpass){
+        return new Users(001,username,userpass,null);
     }
 }
